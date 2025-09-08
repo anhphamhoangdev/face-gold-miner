@@ -1,14 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>HaiZuka - Gold Miner Game</title>
+    <meta charset="UTF-8">
+    <title>HaiZuka - Gold Miner Game with Face Control</title>
     <link rel="stylesheet" href="css/style.css">
-    <meta 
-        name='viewport' 
-        content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' 
-    />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
+    <style>
+        /* Game-specific styles */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        canvas {
+            display: block;
+            background: #87CEEB;
+        }
+        
+        #camera-container {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            padding: 10px;
+            border: 2px solid #FFD700;
+        }
+        
+        #faceCam {
+            border: 1px solid #FFD700;
+            border-radius: 5px;
+            display: block;
+        }
+        
+        #camStatus {
+            color: #FFD700;
+            text-align: center;
+            font-size: 11px;
+            margin-top: 5px;
+            font-family: Arial, sans-serif;
+        }
+        
+        /* Loading screen */
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #000428, #004e92);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            color: #FFD700;
+            font-size: 24px;
+            text-align: center;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #333;
+            border-top: 5px solid #FFD700;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .fade-out {
+            opacity: 0;
+            transition: opacity 1s ease-out;
+        }
+    </style>
 </head>
-<body></body>
-<script type="text/javascript" src="js/gold.js"></script>
-<script type="text/javascript" src="js/game.js"></script>
+<body>
+    <!-- Loading screen -->
+    <div id="loading">
+        <h1>🎮 Gold Miner</h1>
+        <div class="loading-spinner"></div>
+        <p>Loading face detection...</p>
+        <small>Smile to start game, nod to drop hook</small>
+    </div>
+
+    <!-- Face camera (will be created by script if not exists) -->
+    <div id="camera-container">
+        <video id="faceCam" width="240" height="180" autoplay muted playsinline></video>
+        <div id="camStatus">Initializing face detection...</div>
+    </div>
+
+    <!-- MediaPipe Scripts (Load in correct order) -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+
+    <!-- Game Scripts (Load in correct order) -->
+    <script type="text/javascript" src="js/face.js"></script>
+    <script type="text/javascript" src="js/gold.js"></script>
+    <script type="text/javascript" src="js/game.js"></script>
+
+    <script>
+        // Remove loading screen when everything is ready
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const loading = document.getElementById('loading');
+                if (loading) {
+                    loading.classList.add('fade-out');
+                    setTimeout(() => loading.remove(), 1000);
+                }
+            }, 2000);
+        });
+
+        // Handle face detection fallback
+        window.addEventListener('face:fallback', () => {
+            const camStatus = document.getElementById('camStatus');
+            if (camStatus) {
+                camStatus.innerHTML = `
+                    <div style="color: #ff6b6b;">Face detection unavailable</div>
+                    <div style="font-size: 10px;">Click/Press key to start</div>
+                    <div style="font-size: 10px;">Click/Press key to drop hook</div>
+                `;
+            }
+        });
+
+        // Success messages for game events
+        window.addEventListener('face:smile', () => {
+            console.log('Game: Smile detected - Starting game!');
+        });
+
+        window.addEventListener('face:nod', () => {
+            console.log('Game: Nod detected - Dropping hook!');
+        });
+
+        // Debug info
+        console.log('Gold Miner Game initialized with face detection');
+        console.log('Controls:');
+        console.log('- Smile: Start game');
+        console.log('- Nod: Drop/retrieve hook');
+        console.log('- Fallback: Any key or mouse click');
+    </script>
+</body>
 </html>

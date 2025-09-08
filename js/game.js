@@ -36,6 +36,7 @@ class game {
         this.canvas = null;
         this.context = null;
         this.score = 0;
+        this.started = false;
         this.init();
     }
 
@@ -47,7 +48,30 @@ class game {
         this.render();
         this.newGold();
         this.initGold();
-        this.loop();
+        // Wait for face smile to start the loop
+        window.addEventListener('face:smile', () => {
+            if (!this.started) {
+                this.started = true;
+                this.loop();
+            }
+        });
+        // Nod to drop hook
+        window.addEventListener('face:nod', () => {
+            this.solve();
+        });
+        // Fallback: if face model can't load, allow manual start
+        window.addEventListener('face:fallback', () => {
+            const startOnce = () => {
+                if (!this.started) {
+                    this.started = true;
+                    this.loop();
+                }
+            };
+            document.addEventListener('keydown', startOnce, { once: true });
+            document.addEventListener('mousedown', startOnce, { once: true });
+            const status = document.getElementById('camStatus');
+            if (status) status.textContent = 'Face cam: fallback (nhấn phím/click để bắt đầu, gật để thả)';
+        });
         this.listenKeyboard();
         this.listenMouse();
     }
